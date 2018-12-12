@@ -24,8 +24,8 @@ patches/
 
 *.id
 qstrdefs.generated.h
-/partitions_mpy.csv
-/sdkconfig
+#/partitions_mpy.csv
+#/sdkconfig
 sdkconfig.old
 sdkconfig.lobo
 _sdkconfig.saved
