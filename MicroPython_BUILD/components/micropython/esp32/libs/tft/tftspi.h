@@ -102,8 +102,8 @@ typedef struct __attribute__((__packed__)) {
 #define DISP_TYPE_MAX		8
 
 #define DEFAULT_TFT_DISPLAY_WIDTH  240
-#define DEFAULT_TFT_DISPLAY_HEIGHT 240
-#define DEFAULT_DISP_TYPE   DISP_TYPE_ST7789V
+#define DEFAULT_TFT_DISPLAY_HEIGHT 320
+#define DEFAULT_DISP_TYPE   DISP_TYPE_ILI9341
 
 /*
 #define WROVER_V3_CONFIG() {\
@@ -209,7 +209,6 @@ extern uint8_t spibus_is_init;
 #define TFT_DISPOFF    0x28
 #define TFT_DISPON     0x29
 #define TFT_MADCTL	   0x36
-#define TFT_VSCRSADD	 0x37
 #define TFT_PTLAR 	   0x30
 #define TFT_ENTRYM 	   0xB7
 
@@ -313,7 +312,7 @@ extern uint8_t spibus_is_init;
 // Initialization sequence for ILI7749
 // ====================================
 static const uint8_t ST7789V_init[] = {
-  16,                   					        // 15 commands in list
+  15,                   					        // 15 commands in list
   TFT_CMD_FRMCTR2, 5, 0x0c, 0x0c, 0x00, 0x33, 0x33,
   TFT_ENTRYM, 1, 0x45,
   ST_CMD_VCOMS, 1, 0x2B,
@@ -325,9 +324,8 @@ static const uint8_t ST7789V_init[] = {
   ST_CMD_PWCTR1, 2, 0xA4, 0xA1,
   TFT_CMD_GMCTRP1, 14, 0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19,
   TFT_CMD_GMCTRN1, 14, 0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19,
-  TFT_MADCTL, 1, 0x00,					// Memory Access Control (orientation)
+  TFT_MADCTL, 1, (MADCTL_MX | 8),					// Memory Access Control (orientation)
   TFT_CMD_PIXFMT, 1, DISP_COLOR_BITS_16,            // *** INTERFACE PIXEL FORMAT: 0x66 -> 18 bit; 0x55 -> 16 bit
-  TFT_INVONN, 0,
   TFT_CMD_SLPOUT, TFT_CMD_DELAY, 120,				//  Sleep out,	//  120 ms delay
   TFT_DISPON, TFT_CMD_DELAY, 120,
 };
@@ -602,9 +600,6 @@ esp_err_t disp_select();
 //======================
 uint32_t find_rd_speed();
 
-// Scroll display mmory.
-//=================================
-void scollTo(uint16_t _scoll);
 
 // Change the screen rotation.
 // Input: m new rotation value (0 to 3)
