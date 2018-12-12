@@ -893,6 +893,17 @@ static void commandList(const uint8_t *addr) {
 }
 
 //==================================
+void scollTo(uint16_t _scoll) {
+	uint8_t _scoo[2];
+	_scoo[0] = (uint8_t)(_scoll >> 8);
+	_scoo[1] = (uint8_t)(_scoll & 0xFF);
+	if (disp_select() == ESP_OK) {
+		disp_spi_transfer_cmd_data(TFT_VSCRSADD, (uint8_t *)_scoo, 2);
+		disp_deselect();
+	}
+}
+
+//==================================
 void _tft_setRotation(uint8_t rot) {
 	uint8_t rotation = rot & 3; // can't be higher than 3
 	uint8_t send = 1;
@@ -951,16 +962,20 @@ void _tft_setRotation(uint8_t rot) {
     else if (invertrot == 1) {
         switch (rotation) {
             case PORTRAIT:
-            madctl = (MADCTL_MY | MADCTL_MX | TFT_RGB_BGR);
+            madctl = (TFT_RGB_BGR);
+			scollTo(0);
             break;
             case LANDSCAPE:
-            madctl = (MADCTL_MY | MADCTL_MV | TFT_RGB_BGR);
+            madctl = (MADCTL_MX | MADCTL_MV | TFT_RGB_BGR);
+			scollTo(0);
             break;
             case PORTRAIT_FLIP:
-            madctl = (TFT_RGB_BGR);
+            madctl = (MADCTL_MY | MADCTL_MX | TFT_RGB_BGR);
+			scollTo(80);
             break;
             case LANDSCAPE_FLIP:
-            madctl = (MADCTL_MX | MADCTL_MV | TFT_RGB_BGR);
+            madctl = (MADCTL_MY | MADCTL_MV | TFT_RGB_BGR);
+			scollTo(80);
             break;
         }
     }
