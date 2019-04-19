@@ -323,7 +323,8 @@ STATIC mp_obj_t display_tft_init(mp_uint_t n_args, const mp_obj_t *pos_args, mp_
     TFT_setGammaCurve(0);
     TFT_setFont(DEFAULT_FONT, NULL);
     TFT_resetclipwin();
-    if (args[ARG_splash].u_bool) {
+
+    /*if (args[ARG_splash].u_bool) {
         int fhight = TFT_getfontheight();
         _fg = intToColor(iTFT_RED);
         TFT_print("MicroPython", CENTER, (_height/2) - fhight - (fhight/2));
@@ -332,7 +333,7 @@ STATIC mp_obj_t display_tft_init(mp_uint_t n_args, const mp_obj_t *pos_args, mp_
         _fg = intToColor(iTFT_BLUE);
         TFT_print("MicroPython", CENTER, (_height/2) + (fhight/2));
         _fg = intToColor(iTFT_GREEN);
-    }
+    }*/
 
     bcklOn(&self->dconfig);
 

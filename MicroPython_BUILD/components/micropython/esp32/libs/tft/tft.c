@@ -57,6 +57,7 @@
 #include "py/mpprint.h"
 #include "extmod/vfs_native.h"
 
+
 #define DEG_TO_RAD 0.01745329252
 #define RAD_TO_DEG 57.295779513
 #define deg_to_rad 0.01745329252 + 3.14159265359
@@ -79,6 +80,8 @@ extern uint8_t tft_Comic24[];
 extern uint8_t tft_minya24[];
 extern uint8_t tft_tooney32[];
 extern uint8_t tft_def_small[];
+extern uint8_t hzk16[];
+extern uint8_t unic16hzk[];
 
 // ==== Color definitions constants ==============
 const color_t TFT_BLACK       = {   0,   0,   0 };
@@ -130,10 +133,32 @@ dispWin_t dispWin = {
   .y2 = DEFAULT_TFT_DISPLAY_HEIGHT,
 };
 
+/*tft_DefaultFont
 Font cfont = {
 	.font = tft_DefaultFont,
 	.x_size = 0,
 	.y_size = 0x0B,
+	.offset = 0,
+	.numchars = 95,
+	.bitmap = 1,
+};
+*/
+
+/*
+Font cfont = {
+	.font = tft_Ubuntu16,
+	.x_size = 0,
+	.y_size = 0x0f,
+	.offset = 0,
+	.numchars = 95,
+	.bitmap = 1,
+};*/
+
+uint8_t if_debug=0;
+Font cfont = {
+	.font = tft_Dejavu24,
+	.x_size = 0,
+	.y_size = 0x17,
 	.offset = 0,
 	.numchars = 95,
 	.bitmap = 1,
@@ -1818,6 +1843,7 @@ void TFT_setFont(uint8_t font, const char *font_file)
 		  getMaxWidthHeight();
 	  }
 	  //_testFont();
+          if(if_debug)mp_printf(&mp_plat_print, "font=%d new cfont.font=%d.bitmap= %d x_size= %d y_size= %d",font,cfont.font,cfont.bitmap,cfont.x_size,cfont.y_size);  
   }
 }
 
@@ -2215,12 +2241,62 @@ static void _draw7seg(int16_t x, int16_t y, int8_t num, int16_t w, int16_t l, co
 }
 //==============================================================================
 
+unsigned char key_bit[8] = {0x80,0x40,0x20,0x10,0x08,0x04,0x02,0x01};
+const uint8_t hzkme16[]={0x04,0x80,0x0E,0xA0,0x78,0x90,0x08,0x90,0x08,0x84,0xFF,0xFE,0x08,0x80,0x08,0x90,
+                         0x0A,0x90,0x0C,0x60,0x18,0x40,0x68,0xA0,0x09,0x20,0x0A,0x14,0x28,0x14,0x10,0x0C};
+
+uint8_t hzk_flag,Cur_HZK16[32];
+uint8_t Get_Curent_HZK(uint32_t hz_offset)
+{   
+    
+    uint32_t offset;
+/*
+    char err_msg[256] = {'\0'};
+    FILE* fphzk = NULL;
+    fphzk = fopen("/spiffs/HZK16", "rb");
+    if(fphzk == NULL){
+        sprintf(err_msg, "Error opening font file hzk16");
+        for(offset=0;offset<32;offset++)Cur_HZK16[offset]=hzkme16[offset];      
+        return 1;
+    }
+    offset = hz_offset;
+    fseek(fphzk, offset, SEEK_SET);
+    fread(Cur_HZK16, 1, 32, fphzk);
+    fclose(fphzk);
+    fphzk = NULL;*/
+
+    if(hzk_flag==0)for(offset=0;offset<32;offset++)Cur_HZK16[offset]=hzk16[hz_offset + offset];
+    else for(offset=0;offset<32;offset++)Cur_HZK16[offset]=unic16hzk[hz_offset + offset];
+    return 0;
+}
+
+void hz_disp()
+{
+   uint8_t hz_col,hz_row,ifbit;
+   for(hz_row=0;hz_row<16;hz_row++)
+     for(hz_col=0;hz_col<2;hz_col++) 
+           {
+               if(if_debug)mp_printf(&mp_plat_print, "hzdot =:%x",Cur_HZK16[hz_col +hz_row*2]);
+               for(ifbit=0;ifbit<8;ifbit++)
+                   if(key_bit[ifbit] & Cur_HZK16[hz_col +hz_row*2])
+                         TFT_EPD_drawPixe(TFT_X+hz_col*8 + ifbit, TFT_Y+hz_row, _fg, Cur_HZK16[hz_col +hz_row*2]); 
+                                   		
+           }     
+}
+
+
 //======================================
 void TFT_print(char *st, int x, int y) {
 	int stl, i, tmpw, tmph, fh;
 	uint8_t ch;
+        
+        uint8_t hz_h,hz_l,hz_3;
+        uint16_t hz_unic;
+        uint32_t hz_offset,err;
 
 	if (cfont.bitmap == 0) return; // wrong font selected
+        
+        if(if_debug)mp_printf(&mp_plat_print, "str=: %s",st);
 
 	// ** Rotated strings cannot be aligned
 	if ((font_rotate != 0) && ((x <= CENTER) || (y <= CENTER))) return;
@@ -2287,6 +2363,46 @@ void TFT_print(char *st, int x, int y) {
 				TFT_X = dispWin.x1;
 			}
 		}
+                //chinese proc 16*16  cyj 
+                else if((ch & 0xf0) == 0xe0)
+                {
+                  hz_h = ch;
+                  i++;
+                  hz_l = st[i];
+                  i++;
+                  hz_3 = st[i];
+                  if((hz_l & 0xc0) == 0x80 && (hz_3 & 0xc0) == 0x80 )
+                     {
+                        //uint32_t utf8 = (0x00ff0000 & (uint32_t)hz_h << 16) | (0x0000ff00 & (uint32_t)hz_l << 8) | (0x000000ff & (uint32_t)hz_3);
+                        hz_unic = hz_h;
+                        hz_unic = (hz_unic<<12);
+                        hz_l = (hz_l <<2);      
+                        hz_unic +=(hz_l <<4);
+                        hz_3 &=0x3f;
+                        hz_unic +=hz_3;
+                        if(if_debug)mp_printf(&mp_plat_print, "hzunic =:%x",hz_unic); 
+                        hzk_flag=1;
+                        hz_offset = (hz_unic - 0x4e00)*32;			   
+                        err = Get_Curent_HZK(hz_offset);
+                        hz_disp();			
+                        TFT_X+=16;   //1pix space 
+                     }
+                 }
+                //gb2312
+                else if (ch > 0xA0) {
+                           hz_h = ch;
+                           i++;
+                           hz_l = st[i];
+
+                           //hz_h = 0xc3;
+                           //hz_l = 0xc0;
+                           hzk_flag=0;
+                           hz_offset = (94*(hz_h-0xa0-1)+(hz_l-0xa0-1))*32;			   
+                           err = Get_Curent_HZK(hz_offset);
+                           if(if_debug)mp_printf(&mp_plat_print, "hz:h=%d,l=%d offset=: %d,err=:%d",hz_h,hz_l,hz_offset,err);
+                           hz_disp();			
+                           TFT_X+=16;   //1pix space                           
+                       }
 
 		else { // ==== other characters ====
 			if (cfont.x_size == 0) {
@@ -2486,6 +2602,7 @@ void set_7seg_font_atrib(uint8_t l, uint8_t w, int outline, color_t color) {
 //==========================================
 int TFT_getfontsize(int *width, int* height)
 {
+  mp_printf(&mp_plat_print, "cfont.bitmap= %d x_size= %d y_size= %d",cfont.bitmap,cfont.x_size,cfont.y_size);
   if (cfont.bitmap == 1) {
     if (cfont.x_size != 0) *width = cfont.x_size;	// fixed width font
     else *width = cfont.max_x_size;					// proportional font
