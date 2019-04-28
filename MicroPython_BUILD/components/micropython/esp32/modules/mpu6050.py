@@ -18,11 +18,11 @@ class MPU6050:
 
     def get_raw_values(self):
         
-        self.iic.start()
+        #self.iic.start()
 
         a = self.iic.readfrom_mem(self.addr, 0x3B, 14)
 
-        self.iic.stop()
+        #self.iic.stop()
 
         return a
 

@@ -848,7 +848,7 @@ uint8_t getMemAdrLen(int memlen, uint32_t addr)
 STATIC mp_obj_t mp_machine_i2c_readfrom_mem(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args)
 {
 
-
+/*
 	enum { ARG_addr, ARG_memaddr, ARG_n, ARG_memlen, ARG_stop };
     mp_machine_i2c_obj_t *self = pos_args[0];
     _checkMaster(self);
@@ -879,17 +879,17 @@ STATIC mp_obj_t mp_machine_i2c_readfrom_mem(size_t n_args, const mp_obj_t *pos_a
             free(buf);
             i2c_check_error(ret);
 	    return mp_const_empty_bytes;  //cyj 2019-4-25
-        }
+        }*/
         vstr_t vstr;
-        //int n=20;
+        int n=20;
         vstr_init_len(&vstr, n);
-        memcpy(vstr.buf, buf, n);
-        free(buf);
+        //memcpy(vstr.buf, buf, n);
+        //free(buf);
         // Return read data as string
         return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
-    }
+    //}
     // Return empty string        
-    return mp_const_empty_bytes;
+    //return mp_const_empty_bytes;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mp_machine_i2c_readfrom_mem_obj, 1, mp_machine_i2c_readfrom_mem);
 

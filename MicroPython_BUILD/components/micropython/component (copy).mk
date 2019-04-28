@@ -103,15 +103,15 @@ MP_EXTRA_INC += -I$(ESPCOMP)/app_update/include
 MP_EXTRA_INC += -I$(ESPCOMP)/mdns/include
 MP_EXTRA_INC += -I$(ESPCOMP)/esp_https_ota/include
 
-#ifdef CONFIG_MICROPY_USE_BLUETOOTH
+ifdef CONFIG_MICROPY_USE_BLUETOOTH
 MP_EXTRA_INC += -I$(ESPCOMP)/bt/include
 MP_EXTRA_INC += -I$(ESPCOMP)/bt/bluedroid/api/include
-#else
-#ifdef CONFIG_MICROPY_USE_RFCOMM
-#MP_EXTRA_INC += -I$(ESPCOMP)/bt/include
-#MP_EXTRA_INC += -I$(ESPCOMP)/bt/bluedroid/api/include
-#endif
-#endif
+else
+ifdef CONFIG_MICROPY_USE_RFCOMM
+MP_EXTRA_INC += -I$(ESPCOMP)/bt/include
+MP_EXTRA_INC += -I$(ESPCOMP)/bt/bluedroid/api/include
+endif
+endif
 
 ifdef CONFIG_MICROPY_USE_GPS
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libnmea/src/nmea
@@ -225,10 +225,10 @@ ifdef CONFIG_MICROPY_USE_ETHERNET
 SRC_C += esp32/network_lan.c
 endif
 
-#ifdef CONFIG_MICROPY_USE_BLUETOOTH
+ifdef CONFIG_MICROPY_USE_BLUETOOTH
 SRC_C += esp32/bluetooth_le.c
 SRC_C += esp32/modbluetooth.c
-#endif
+endif
 
 ifdef CONFIG_MICROPY_USE_RFCOMM
 SRC_C += esp32/machine_rfcomm.c

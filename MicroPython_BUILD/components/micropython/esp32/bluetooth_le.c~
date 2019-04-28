@@ -1188,8 +1188,7 @@ STATIC const mp_rom_map_elem_t btle_locals_dict_table[] = {
     },
     {   MP_ROM_QSTR(MP_QSTR_ADV_FILTER_ALLOW_SCAN_WLST_CON_WLST),
         MP_ROM_INT(ADV_FILTER_ALLOW_SCAN_WLST_CON_WLST)
-    },
-    //cyj mod end
+    } //cyj mod end
     */
 };
 
