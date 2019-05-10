@@ -389,9 +389,9 @@ static void i2c_check_error(int err)
 //----------------------------------
 STATIC void _checkAddr(uint8_t addr)
 {
-	if ((addr < 0x08) || (addr > 0x77)) {
+	/*if ((addr < 0x08) || (addr > 0x77)) {
         mp_raise_ValueError("Wrong i2c address (0x08 - 0x77 allowed)");
-	}
+	}*/
 }
 
 //--------------------------------------------------
@@ -693,7 +693,8 @@ STATIC mp_obj_t mp_machine_i2c_scan(mp_obj_t self_in)
 
     // don't include in scan the reserved 7-bit addresses: 0x00-0x07 & 0x78-0x7F
 
-	for (int addr = 0x08; addr < 0x78; ++addr) {
+    //	for (int addr = 0x08; addr < 0x78; ++addr) {  //cyj 2010-5-10 modify to 01 to 7f
+        for (int addr = 0x01; addr < 0x7f; ++addr) {
 		if (hw_i2c_slave_detect(self, addr)) {
 			mp_obj_list_append(list, MP_OBJ_NEW_SMALL_INT(addr));
 		}
@@ -735,12 +736,12 @@ STATIC mp_obj_t mp_machine_i2c_readfrom(mp_uint_t n_args, const mp_obj_t *pos_ar
     if (args[1].u_int > 0) {
         uint8_t *buf = heap_caps_malloc(args[1].u_int, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
         if (buf == NULL) {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Error allocating I2C data buffer"));	    
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Error allocating I2C data buffer"));
         }
-        int ret = mp_i2c_master_read(self, args[0].u_int, false, 0, buf, args[1].u_int, false); //cyj        
+        int ret = mp_i2c_master_read(self, args[0].u_int, false, 0, buf, args[1].u_int, false);
         if (ret != ESP_OK) {
             free(buf);
-            i2c_check_error(ret);            
+            i2c_check_error(ret);
         }
         vstr_t vstr;
         vstr_init_len(&vstr, args[1].u_int);
@@ -847,13 +848,10 @@ uint8_t getMemAdrLen(int memlen, uint32_t addr)
 //-----------------------------------------------------------------------------------------------------
 STATIC mp_obj_t mp_machine_i2c_readfrom_mem(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args)
 {
-
-
 	enum { ARG_addr, ARG_memaddr, ARG_n, ARG_memlen, ARG_stop };
     mp_machine_i2c_obj_t *self = pos_args[0];
     _checkMaster(self);
-    
-    //i2c_check_error(124);
+
     // parse arguments
     mp_arg_val_t args[MP_ARRAY_SIZE(mp_machine_i2c_mem_allowed_args)];
     mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(mp_machine_i2c_mem_allowed_args), mp_machine_i2c_mem_allowed_args, args);
@@ -867,28 +865,22 @@ STATIC mp_obj_t mp_machine_i2c_readfrom_mem(size_t n_args, const mp_obj_t *pos_a
     	uint8_t memlen = getMemAdrLen(args[ARG_memlen].u_int, addr);
 
         uint8_t *buf = heap_caps_malloc(n, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
-
         if (buf == NULL) {
-            free(buf);//cyj 2019-4-25
             nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Error allocating I2C data buffer"));
-            return mp_const_empty_bytes;  //cyj 2019-4-25
         }
         int ret = mp_i2c_master_read(self, args[ARG_addr].u_int, memlen, addr, buf, n, args[ARG_stop].u_bool);
-        
         if (ret != ESP_OK) {
             free(buf);
             i2c_check_error(ret);
-	    return mp_const_empty_bytes;  //cyj 2019-4-25
         }
         vstr_t vstr;
-        //int n=20;
         vstr_init_len(&vstr, n);
         memcpy(vstr.buf, buf, n);
         free(buf);
         // Return read data as string
         return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
     }
-    // Return empty string        
+    // Return empty string
     return mp_const_empty_bytes;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mp_machine_i2c_readfrom_mem_obj, 1, mp_machine_i2c_readfrom_mem);

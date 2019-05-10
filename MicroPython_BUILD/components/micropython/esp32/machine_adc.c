@@ -438,7 +438,8 @@ STATIC mp_obj_t madc_make_new(const mp_obj_type_t *type, size_t n_args, size_t n
     if ((self->adc_num != 0) && (self->adc_num != ADC_UNIT_1) && (self->adc_num != ADC_UNIT_2)) {
         mp_raise_ValueError("invalid ADC unit (1 and 2 allowed)");
     }
-    self->atten = ADC_ATTEN_DB_0;
+    //cyj modify 2019-5-9 init 
+    self->atten = ADC_ATTEN_DB_11;//ADC_ATTEN_DB_0;
     self->width = ADC_WIDTH_BIT_12;
 
     if (pin_id != ADC1_CHANNEL_HALL) {
@@ -625,6 +626,10 @@ STATIC mp_obj_t madc_read(mp_obj_t self_in) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(madc_read_obj, madc_read);
 
+/*
+  modify atten to 11DB  cyj 2019-5-8 
+  2019-5-10 user modify is ok
+*/
 //---------------------------------------------------------------
 STATIC mp_obj_t madc_atten(mp_obj_t self_in, mp_obj_t atten_in) {
     madc_obj_t *self = self_in;
@@ -632,7 +637,14 @@ STATIC mp_obj_t madc_atten(mp_obj_t self_in, mp_obj_t atten_in) {
 
     if (self->gpio_id == GPIO_NUM_MAX) return mp_const_none;
 
+       
     adc_atten_t atten = mp_obj_get_int(atten_in);
+ 
+    // hold atten to db11 cyj
+    //atten = ADC_ATTEN_DB_11;
+    //printf("\n -----Esp32 adc atten is ADC_ATTEN_DB_11\n");
+    
+
     if ((atten < ADC_ATTEN_DB_0) || (atten > ADC_ATTEN_DB_11)) mp_raise_ValueError("Unsupported atten value");
 
     esp_err_t err;

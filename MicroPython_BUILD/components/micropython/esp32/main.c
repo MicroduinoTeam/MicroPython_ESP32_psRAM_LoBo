@@ -64,6 +64,7 @@
 #include "driver/uart.h"
 #include "rom/uart.h"
 #include "sdkconfig.h"
+#include "microduino.h"
 
 
 // ================================================
@@ -153,6 +154,7 @@ void mp_task(void *pvParameter)
         	fd = fopen(VFS_NATIVE_MOUNT_POINT"/main.py", "rb");
             if (fd) {
             	fclose(fd);
+                printf("\n -----Esp32 Microduino Version %s created date %s-----\n",Fireware_VERSION_STRING,Fireware_BUILD_DATE);
             	pyexec_file("main.py");
             }
         }
